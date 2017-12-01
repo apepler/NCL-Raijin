@@ -1,42 +1,34 @@
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 
-Cthresh=8
-levels1=ispan(0,80,10)
-levels1a=ispan(0,90,10)
-
-CthreshP=95
-levels2=ispan(0,20,2)
-levels2a=ispan(0,22,2)
-Fthresh=95
-
-levels3=ispan(0,10,1)
-levels3a=ispan(0,11,1)
-
-levels=(/1,5,10,15,20,30,40,50,60,70,80/)
+levels=ispan(0,20,2)
 
 dir="/g/data/eg3/asp561/CHaines_ERAI/"
 ifile=addfile(dir+"CHaines_19792016_06UTC.nc","r")
 time=ifile->time
 time2=cd_calendar(time,0)
+lat=ifile->lat
+lon=ifile->lon
 
-CH=ifile->CHaines
-CHp=ifile->CH_percentile
-
-ffile=addfile(dir+"FFDI_AWAP_19792016_regrid.nc","r")
-FFDI=ffile->FFDI
-FFDIp=ffile->FFDI_percentile
-
-FFDIp=where(conform_dims(dimsizes(FFDI),dim_max_n(FFDI,0).eq.dim_min_n(FFDI,0),(/1,2/)),FFDIp@_FillValue,FFDIp)
+data=new((/3,dimsizes(time),dimsizes(lat),dimsizes(lon)/),"float")
+data(0,:,:,:)=(/ifile->CA/)
+data(1,:,:,:)=(/ifile->CB/)
+data(2,:,:,:)=(/ifile->CHaines/)
 
 years=ispan(1979,2016,1)
+
+CHp=new((/3,dimsizes(lat),dimsizes(lon)/),"float")
+
+do x=0,2
+  CHp(x,:,:)=(/dim_max_n(data(x,:,:,:),0)/)
+end do
 
 a=dimsizes(CHp)
 CH95p=new((/3,dimsizes(years),4,a(1),a(2)/),"integer")
 CH95p!3="lat"
-CH95p&lat=CHp&lat
+CH95p&lat=lat
 CH95p!4="lon"
-CH95p&lon=CHp&lon
+CH95p&lon=lon
 
 snames=(/"DJF","MAM","JJA","SON"/)
 seasons=(/12,3,6,9/)
@@ -44,31 +36,30 @@ seasons=(/12,3,6,9/)
 do y=0,dimsizes(years)-1
 do m=1,3
   I=ind(time2(:,0).eq.years(y).and.time2(:,1).ge.seasons(m).and.time2(:,1).le.seasons(m)+2)
-  CH95p(0,y,m,:,:)=dim_num_n(CH(I,:,:).gt.Cthresh,0)
-  CH95p(1,y,m,:,:)=dim_num_n(CHp(I,:,:).gt.CthreshP,0)
-  CH95p(2,y,m,:,:)=dim_num_n(FFDIp(I,:,:).gt.Fthresh.and.CHp(I,:,:).gt.CthreshP,0)
+  do x=0,2
+    CH95p(x,y,m,:,:)=dim_num_n(data(x,I,:,:).eq.conform_dims(dimsizes(data(x,I,:,:)),CHp(x,:,:),(/1,2/)),0)
+  end do
   delete(I)
 end do
 end do
 
 do y=1,dimsizes(years)-1
   I=ind((time2(:,0).eq.years(y-1).and.time2(:,1).eq.12).or.(time2(:,0).eq.years(y).and.time2(:,1).le.2))
-  CH95p(0,y,0,:,:)=dim_num_n(CH(I,:,:).gt.Cthresh,0)
-  CH95p(1,y,0,:,:)=dim_num_n(CHp(I,:,:).gt.CthreshP,0)
-  CH95p(2,y,0,:,:)=dim_num_n(FFDIp(I,:,:).gt.Fthresh.and.CHp(I,:,:).gt.CthreshP,0)
-
+  do x=0,2
+    CH95p(x,y,0,:,:)=dim_num_n(data(x,I,:,:).eq.conform_dims(dimsizes(data(x,I,:,:)),CHp(x,:,:),(/1,2/)),0)
+  end do
   delete(I)
 end do
 
 CH95pave=dim_avg_n_Wrap(CH95p,0)
 
-  wks = gsn_open_wks("eps","Fig3_CHainesge"+Cthresh+"_"+CthreshP+"p_FFDIge"+Fthresh+"_forsub_v2")             ; send graphics to PNG file
+  wks = gsn_open_wks("pdf","chaines_components_eqmax")             ; send graphics to PNG file
 
   gsn_define_colormap(wks,"WhiteYellowOrangeRed")
   res                      = True               ; plot mods desired
   res@cnFillOn             = True               ; turn on color fill
   res@cnLevelSelectionMode = "ExplicitLevels"
-;  res@cnLevels             = levels
+  res@cnLevels             = levels
   res@gsnAddCyclic = False
   res@gsnDraw  = False                          ; don't draw
   res@gsnFrame = False                          ; don't advance frame
@@ -106,9 +97,6 @@ CH95pave=dim_avg_n_Wrap(CH95p,0)
   plots3 = new(4,graphic)
 
 res2=res
-res@cnLevels             = levels1
-res2@cnLevels             = levels2
-
 res2@tmYLLabelFontColor = "white"
 
 labs1=(/"a","b","c","d"/)
@@ -120,9 +108,9 @@ labs3=(/"i","j","k","l"/)
 ;  Make the array as we go
   tmp=dim_avg_n_Wrap(CH95p(0,:,m,:,:),0)
   tmp!0="lat"
-  tmp&lat=CHp&lat
+  tmp&lat=lat
   tmp!1="lon"
-  tmp&lon=CHp&lon
+  tmp&lon=lon
 
   if(m.lt.3) then
    res@tmXBLabelFontColor = "white"
@@ -141,18 +129,15 @@ labs3=(/"i","j","k","l"/)
 
   tmp=(/dim_avg_n_Wrap(CH95p(2,:,m,:,:),0)/)
 
-  res2@cnLevels             = levels3
   res2@gsnLeftString=labs3(m)+") "+snames(m)
   plots3(m) = gsn_csm_contour_map(wks,tmp, res2)     ; create plot
-  res2@cnLevels             = levels2
   end do
 
   resP                  = True                   ; modify the panel plot
-;  resP@gsnPanelMainString = "CH >= "+Cthresh
   resP@gsnMaximize=True
   resP@gsnPaperOrientation = "portrait"
   
-  resP@lbTitleString="CH > "+Cthresh+" (days)"
+  resP@lbTitleString="CA == max (days)"
   resP@lbTitleOn        =  True                ; turn on title
   resP@lbTitlePosition  = "Bottom"              ; title position
   resP@lbTitleDirection = "Across"             ; title direction
@@ -176,7 +161,7 @@ labs3=(/"i","j","k","l"/)
   gsn_panel(wks,plots1,(/4,1/),resP)
 
   resP2=resP
-  resP2@lbTitleString="CH > "+CthreshP+"%ile (days)"
+  resP2@lbTitleString="CB == max (days)"
 ;  delete(resP2@lbLabelStrings)
 ;  resP2@lbLabelStrings=levels2a
   resP2@gsnPanelLeft=0.4
@@ -186,7 +171,7 @@ labs3=(/"i","j","k","l"/)
 
   resP2=resP
 
-  resP2@lbTitleString= "Compound events (days)"
+  resP2@lbTitleString= "CHaines == max (days)"
   resP2@gsnPanelLeft=0.65
   resP2@gsnPanelRight=0.9
   resP2@gsnPanelMainPosXF  = 0.77
