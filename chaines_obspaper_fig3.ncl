@@ -59,7 +59,7 @@ wks_type = "pdf"
 ;wks_type@wkOrientation = "landscape"
 wks_type@wkPaperWidthF = 9
 wks_type@wkPaperHeightF = 6
-  wks = gsn_open_wks(wks_type,"Fig2_FFDICHcorr_propF"+pthresh+"pC"+pthresh+"p_forsub")             ; send graphics to PNG file
+  wks = gsn_open_wks(wks_type,"Fig2_FFDICHcorr_propF"+pthresh+"pC"+pthresh+"p_ForRevision")             ; send graphics to PNG file
 
   gsn_define_colormap(wks,"WhiteYellowOrangeRed")
   res                      = True               ; plot mods desired
@@ -147,8 +147,7 @@ res@pmLabelBarOrthogonalPosF = .15
    res@tmYLLabelFontColor = "white"   
    res@cnLevels=levels2
   res@lbLabelStrings=levels2a
-;   res@gsnLeftString="b) Compound events (%)"
-  res@lbTitleString="%"
+  res@lbTitleString="Compound event days (%)"
 
    plot(1) = gsn_csm_contour_map(wks,CHcor(1,:,:), res)     ; create plot
 

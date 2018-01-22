@@ -62,7 +62,7 @@ end do
 
 CH95pave=dim_avg_n_Wrap(CH95p,0)
 
-  wks = gsn_open_wks("eps","Fig3_CHainesge"+Cthresh+"_"+CthreshP+"p_FFDIge"+Fthresh+"_forsub_v2")             ; send graphics to PNG file
+  wks = gsn_open_wks("pdf","Fig3_CHainesge"+Cthresh+"_"+CthreshP+"p_FFDIge"+Fthresh+"_forsub_v2")             ; send graphics to PNG file
 
   gsn_define_colormap(wks,"WhiteYellowOrangeRed")
   res                      = True               ; plot mods desired

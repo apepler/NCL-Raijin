@@ -22,12 +22,12 @@ I=ind(lon2.ge.min(lon).and.lon2.le.max(lon))
 J=ind(lat2.ge.min(lat).and.lat2.le.max(lat))
 landmask=short2flt(mfile->lsm(0,J,I))
 
-wks_type = "eps"
+wks_type = "pdf"
 ;wks_type@wkOrientation = "landscape"
 wks_type@wkPaperWidthF = 5
 wks_type@wkPaperHeightF = 4.6
 
-  wks = gsn_open_wks(wks_type,"Fig1a_chaines_erai_p"+pthresh+"_forsub")             ; send graphics to PNG file
+  wks = gsn_open_wks(wks_type,"Fig1a_chaines_erai_p"+pthresh+"_ForRevision")             ; send graphics to PNG file
 
   gsn_define_colormap(wks,"WhiteYellowOrangeRed")
   res                      = True               ; plot mods desired
@@ -70,6 +70,14 @@ wks_type@wkPaperHeightF = 4.6
   res@tmXBLabelFontHeightF = 0.015                 ; resize tick labels
   res@tmYLLabelFontHeightF = 0.015
   res@lbTitleFontHeightF = 0.015
+  res@tmYLLabelAngleF = 90.
+  res@gsnMajorLatSpacing = 10  
+
+;  res@tmYLMode   = "Explicit"
+;  res@tmYLValues = ispan(-40,-10,10)
+;  res@tmYLLabels = (/"40~S~o~N~S","30~S~o~N~S",\
+;                     "20~S~o~N~S","10~S~o~N~S"/)
+
 res@pmLabelBarOrthogonalPosF = .15
 res@pmLabelBarWidthF = 0.55
 res@pmLabelBarHeightF = 0.05
@@ -129,7 +137,7 @@ res@pmLabelBarHeightF = 0.05
  
 ;   CHpc=mask(CHpc,landmask,0)
 
-   plot=gsn_csm_contour_map(wks,CHpc, res)     ; create plot
+   plot=gsn_csm_contour_map_ce(wks,CHpc, res)     ; create plot
 
    ptnames=(/"Alice Springs","Townsville","Perth","Wagga Wagga"/)
    ptlats=(/-23.7951,-19.2483,-31.9275,-35.1583/)
