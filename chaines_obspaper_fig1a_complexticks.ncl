@@ -314,16 +314,7 @@ wks_type@wkPaperHeightF = 4.6
 ;  res@lbLabelPosition  = "Center"             ; label position
   res@cnLabelBarEndStyle="IncludeMinMaxLabels"
   res@lbLabelStrings=ispan(0,14,1)
-  res@tmXBLabelFontHeightF = 0.015                 ; resize tick labels
-  res@tmYLLabelFontHeightF = 0.015
   res@lbTitleFontHeightF = 0.015
-  res@tmYLLabelAngleF = 90.
-  res@gsnMajorLatSpacing = 10  
-
-;  res@tmYLMode   = "Explicit"
-;  res@tmYLValues = ispan(-40,-10,10)
-;  res@tmYLLabels = (/"40~S~o~N~S","30~S~o~N~S",\
-;                     "20~S~o~N~S","10~S~o~N~S"/)
 
 res@pmLabelBarOrthogonalPosF = .15
 res@pmLabelBarWidthF = 0.55
@@ -390,7 +381,8 @@ tmres          = True
 
 ;---Set the values you want for the map tickmarks.
 ;  tmres@tmXBLabelFontHeightF = 0.008         ; Default is a bit large
-
+   tmres@tmXBLabelFontHeightF = 0.022
+   tmres@tmYLLabelFontHeightF = 0.022
 ;---We're putting tickmarks on all four axes.
   tmres@tmYLValues = ispan(-40,-20,10)
   tmres@tmXBValues = ispan(110,150,10)
@@ -416,9 +408,9 @@ tmres          = True
   dum2=gsn_add_text(wks,plot,ptnames,ptlons-1,ptlats,txres)
 
    txres2               = True
-   txres2@txFontHeightF = 0.035
+   txres2@txFontHeightF = 0.03
 ;   dum3=gsn_add_text(wks,plot,"a)",113,-13,txres2)
-   gsn_text_ndc(wks,"a)",0.03,0.95,txres2)
+   gsn_text_ndc(wks,"a)",0.08,0.92,txres2)
    draw(plot)
    maximize_output(wks,True)
 end
