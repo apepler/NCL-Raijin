@@ -5,13 +5,13 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_code.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 
 cdir="/g/data/eg3/ajd548/NESP_EWP/CAPE/"
-types=(/"erainterim_adiabatic_largemix","erainterim_adiabatic_smallmix","erainterim_reversible_largemix","erainterim_reversible_smallmix","erainterim_reversible_nomix"/)
-tnames=(/"Adiabatic, Large Mixing","Adiabatic, Small Mixing","Reversible, Large Mixing","Reversible,  Small Mixing","Reversible, No Mixing"/)
+types=(/"erainterim_adiabatic_largemix","erainterim_adiabatic_smallmix","erainterim_adiabatic_nomix","erainterim_reversible_largemix","erainterim_reversible_smallmix","erainterim_reversible_nomix"/)
+tnames=(/"Adiabatic, Large Mixing","Adiabatic, Small Mixing","Adiabatic, No Mixing","Reversible, Large Mixing","Reversible,  Small Mixing","Reversible, No Mixing"/)
 
 pthresh=95
-ofile="MUCAPE_ERAI_Australia_"+pthresh+"pc_methodpanel"
+ofile="MUCAPE_ERAI_Australia_"+pthresh+"pc_methodpanel_19792016"
 
-years=ispan(2000,2016,1)
+years=ispan(1979,2016,1)
 lonlim=(/110,160/)
 latlim=(/-45,-10/)
 levels=(/50,100,200,500,1000,1500,2000,2500,3000/)
@@ -58,14 +58,14 @@ delete(ifile)
   wks = gsn_open_wks(wks_type,ofile)             ; send graphics to PNG file
   gsn_define_colormap(wks,"WhiteYellowOrangeRed")
 
-  plot=new(5,graphic)
+  plot=new(dimsizes(types),graphic)
 
   do p=0,dimsizes(types)-1
    print(p)
-   ifile=addfiles( systemfunc (" ls -1 " + cdir+ types(p) + "/mucape_*.nc"), "r")
+   if(p.eq.5) then
+    ifile=addfiles( systemfunc (" ls -1 " + cdir+ types(p) + "/mucape_*.nc"), "r")
     mucape=ifile[:]->mucape
     counts=round(pthresh*dimsizes(mucape&time)/100.,3)
-
     mucapepc=new((/dimsizes(lat),dimsizes(lon)/),typeof(mucape))
     mucapepc!0="lat"
     mucapepc&lat=lat
@@ -84,15 +84,20 @@ delete(ifile)
     end do
     end do
 
+    mucapepc@standard_name = "95th percentile of Most Unstable CAPE"
+    mucapepc@units = "J/kg"
+ 
+    a=addfile("mucape_"+types(p)+"_95pc_19792016.nc","c")
+    a->mucape_95pc=mucapepc
+   else 
+    a=addfile("mucape_"+types(p)+"_95pc_19792016.nc","r")
+    mucapepc=a->mucape_95pc
+   end if
+
+   res@gsnLeftString=""
    res@gsnRightString=tnames(p)
    plot(p)=gsn_csm_contour_map_ce(wks,mucapepc, res)     ; create plot
 
-   mucapepc@standard_name = "95th percentile of Most Unstable CAPE"
-   mucapepc@units = "J/kg"
-
-   a=addfile("mucape_"+types(p)+"_95pc.nc","c")
-   a->mucape_95pc=mucapepc
-   delete([/a,ifile,mucape,mucapepc/])
  end do
 
   resP                  = True                   ; modify the panel plot
@@ -108,5 +113,5 @@ resP@gsnPaperOrientation = "portrait"
   resP@lbLabelFontHeightF =.01
  resP@gsnPanelYWhiteSpacePercent = 5
   resP@gsnPanelRowSpec = True
-  gsn_panel(wks,plot,(/2,3/),resP)
+  gsn_panel(wks,plot,(/3,3/),resP)
 
