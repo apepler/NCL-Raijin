@@ -4,15 +4,20 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/wrf/WRFUserARW.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
-ECLDIR="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/proj240_lows_rad2cv1/"
-filename=ECLDIR+"UM_lows_ERAI_proj240_rad2cv1_bigaust_fixes.csv"
-fout=ECLDIR+"ECLcomposite_ERAI_proj240_rad2cv1_aust_20112015.nc"
+ECLDIR="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/500hPa_z/proj240_lows_rad2cv10/"
+filename=ECLDIR+"UM_lows_ERAI_500hPa_proj240_rad2cv10_bigaust_fixes.csv"
+fout=ECLDIR+"composite_ERAI_500hPa_proj240_rad2cv10_aust.nc"
+
+;ECLDIR="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/proj240_lows_rad5cv0.15/"
+;filename=ECLDIR+"UM_lows_ERAI_proj240_rad2cv1_bigaust_fixes.csv"
+;filename=ECLDIR+"ECLfixes_UM_ERAI_proj240_rad5cv0.15.csv"
+;fout=ECLDIR+"ECLcomposite_ERAI_proj240_rad5cv0.15.nc"
 
 lonlim=(/110,160/)
 latlim=(/-45,-10/)
 
-syear=2011
-eyear=2015
+syear=1979
+eyear=2017
 edir="/g/data1/ub4/erai/netcdf/"
 
 lon0=fspan(-10.5,10.5,29)
@@ -35,8 +40,13 @@ delete(fin)
   date1 = tointeger(str_get_field(data,4,delim))
   lat1 = tofloat(str_get_field(data,9,delim))
   lon1= tofloat(str_get_field(data,8,delim))
+  loc1= tointeger(str_get_field(data,12,delim))
 
   I=ind(date1.ge.syear*10000.and.date1.le.(eyear+1)*10000.and.lat1.ge.min(latlim).and.lat1.le.max(latlim).and.lon1.ge.min(lonlim).and.lon1.le.max(lonlim))
+;  I=ind(date1.ge.syear*10000.and.date1.le.(eyear+1)*10000)
+;    I=ind(date1.ge.syear*10000.and.date1.le.(eyear+1)*10000.and.loc1.eq.1)
+  delete([/date1,lat1,lon1,loc1/])
+
   date = tointeger(str_get_field(data(I),4,delim))
   time = tointeger(str_get_field(data(I),5,delim))/6
   lat = tofloat(str_get_field(data(I),9,delim))
@@ -57,11 +67,11 @@ delete(fin)
   ECL_U10&lon=lon0
   ECL_V10=ECL_U10
   ECL_SLP=ECL_U10
-  ECL_PRCP=ECL_U10
+;  ECL_PRCP=ECL_U10
   ECL_U10@description="6-hour instantaneous 10m zonal wind within 1000km radius of low centre"
   ECL_V10@description="6-hour instantaneous 10m meridional wind within 1000km radius of low centre"
   ECL_SLP@description="6-hour instantaneous slp within 1000km radius of low centre"
-  ECL_PRCP@description="6-hour total rainfall within 1000km radius of low centre and +- 3 hours"
+;  ECL_PRCP@description="6-hour total rainfall within 1000km radius of low centre and +- 3 hours"
 
   I=ind_nearest_coord(lat,elat,0)
   J=ind_nearest_coord(lon,elon,0)
@@ -86,19 +96,20 @@ delete(fin)
     p=p/100. 
     delete(Data)
 
-    Data=addfile(systemfunc("ls -1 "+edir+"/3hr/atmos/oper_fc_sfc/v01/tp/tp_3hrs_ERAI_historical_fc-sfc_"+year(ip)+sprinti("%2.2i",month(ip))+"*"),"r")
-    n=(day(ip)-1)*8+time(ip)
-    prcp=dim_sum_n_Wrap(Data->tp(n:(n+1),:,:),0)*1000.
-    delete(Data)
+;    Data=addfile(systemfunc("ls -1 "+edir+"/3hr/atmos/oper_fc_sfc/v01/tp/tp_3hrs_ERAI_historical_fc-sfc_"+year(ip)+sprinti("%2.2i",month(ip))+"*"),"r")
+;    n=(day(ip)-1)*8+time(ip)
+;    prcp=dim_sum_n_Wrap(Data->tp(n:(n+1),:,:),0)*1000.
+;    delete(Data)
  
     if(I(ip).gt.14.and.J(ip).gt.14.and.I(ip).lt.227.and.J(ip).lt.466) then
       ECL_U10(ip,:,:)=(/u((I(ip)+14):(I(ip)-14),(J(ip)-14):(J(ip)+14))/)
       ECL_V10(ip,:,:)=(/v((I(ip)+14):(I(ip)-14),(J(ip)-14):(J(ip)+14))/)
       ECL_SLP(ip,:,:)=(/p((I(ip)+14):(I(ip)-14),(J(ip)-14):(J(ip)+14))/)
-      ECL_PRCP(ip,:,:)=(/prcp((I(ip)+14):(I(ip)-14),(J(ip)-14):(J(ip)+14))/)
+;      ECL_PRCP(ip,:,:)=(/prcp((I(ip)+14):(I(ip)-14),(J(ip)-14):(J(ip)+14))/)
     end if
 
-    delete([/u,v,p,prcp/])
+;    delete([/u,v,p,prcp/])
+    delete([/u,v,p/])
   end do
 
 ; Finally, write me a netcdf file
@@ -113,4 +124,4 @@ out->ECL_U10=ECL_U10
 out->ECL_V10=ECL_V10
 out->ECL_WS10=ECL_WS10
 out->ECL_SLP=ECL_SLP
-out->ECL_PRCP=ECL_PRCP
+;out->ECL_PRCP=ECL_PRCP

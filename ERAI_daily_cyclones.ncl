@@ -4,7 +4,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 
 edir="/g/data1/ub4/erai/netcdf/6hr/atmos/"
 odir=""
-date2=(/2015,1,24,6/)
+date2=(/1998,12,27,0/)
 date=date2(0)+sprinti("%2.2i",date2(1))+sprinti("%2.2i",date2(2))+sprinti("%2.2i",date2(3))
 
 ;hdir="/g/data/eg3/asp561/CycloneTracking/ERAI/proj100_highs_rad10cv0.075/"

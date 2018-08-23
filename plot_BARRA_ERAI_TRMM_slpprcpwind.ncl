@@ -6,8 +6,9 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 bdir="/g/data/ma05/BARRA_R/v1/"
 edir="/g/data1/ub4/erai/netcdf/6hr/atmos/"
+tdir="/g/data/eg3/asp561/TRMM/"
 odir=""
-date2=(/2013,2,23,18/)
+date2=(/2013,1,29,0/)
 date=date2(0)+sprinti("%2.2i",date2(1))+sprinti("%2.2i",date2(2))+sprinti("%2.2i",date2(3))
 
 ; Set up plotting resources
@@ -56,7 +57,7 @@ date=date2(0)+sprinti("%2.2i",date2(1))+sprinti("%2.2i",date2(2))+sprinti("%2.2i
   vres@gsnRightString=""
   vres@vcLineArrowColor="black"
   vres@vcVectorDrawOrder         = "PostDraw"
-  vres@vcRefAnnoOrthogonalPosF = -1.095   ; move ref vector into plot
+  vres@vcRefAnnoOrthogonalPosF = -1   ; move ref vector into plot
   vres@vcGlyphStyle            = "CurlyVector"    ; turn on curly vectors
   vres@vcRefAnnoString1 = "$VMG$ m/s"
   vres@vcRefAnnoString2On = False
@@ -96,12 +97,12 @@ opts_psl = True
 
 wks_type = "pdf"
 ;wks_type@wkOrientation = "landscape"
-wks_type@wkPaperWidthF = 9
+wks_type@wkPaperWidthF = 10
 wks_type@wkPaperHeightF = 5
 
-wks = gsn_open_wks(wks_type,odir+"ERAI_BARRA_850wind_prcp_mslp_"+date)
+wks = gsn_open_wks(wks_type,odir+"ERAI_BARRA_TRMM_850wind_prcp_mslp_"+date)
   gsn_define_colormap(wks,"precip_11lev")
-  plots = new(2,graphic)
+  plots = new(3,graphic)
 
 ; ERAI plotting
 
@@ -178,13 +179,41 @@ wks = gsn_open_wks(wks_type,odir+"ERAI_BARRA_850wind_prcp_mslp_"+date)
   overlay(plots(1),wind)
   overlay(plots(1),contour_psl)
 
+; TRMM plotting
+  delete(prcp)
+  date4=date2(0)+sprinti("%2.2i",date2(1))+sprinti("%2.2i",date2(2))
+  if(date2(0).ge.2000.and.date2(0).le.2010) then
+    dfile=tdir+date2(0)+"/3B42."+date4+".7A.nc"
+    if (fileexists(dfile)) then
+      FILE1=addfile(dfile,"r")
+      prcp=FILE1->pcp(date2(3)/3,:,:)
+    end if
+  else if(date2(0).gt.2013) then
+      dfile=tdir+date2(0)+"/3B42."+date4+"."+sprinti("%2.2i",date2(3))+".7.nc"
+      if (fileexists(dfile)) then
+       FILE1=addfile(dfile,"r")
+       prcp=FILE1->pcp(0,:,:)
+      end if
+  else
+    dfile=tdir+date2(0)+"/3B42."+date4+".7.nc"
+    if (fileexists(dfile)) then
+     FILE1=addfile(dfile,"r")
+     prcp=FILE1->pcp(date2(3)/3,:,:)
+    end if
+  end if
+  end if
+; print(dfile)
+  prcp=prcp*6
+  res@gsnLeftString = "TRMM (instantaneous)"
+  plots(2) = gsn_csm_contour_map(wks,prcp,res)
+
 ; Plot panel
 
   resP                  = True                   ; modify the panel plot
   resP@gsnMaximize      = True                   ; use full page
 resP@gsnPaperOrientation = "portrait"
   resP@lbTitleFontHeightF=0.012
-  resP@lbTitleString="2m air temperature (C)"
+  resP@lbTitleString="6h rainfall accumulation (mm)"
   resP@lbTitleOn        =  True                ; turn on title
   resP@lbTitlePosition  = "Bottom"              ; title position
   resP@lbTitleDirection = "Across"             ; title direction
@@ -192,5 +221,5 @@ resP@gsnPaperOrientation = "portrait"
   resP@gsnPanelLabelBar    = True
   resP@lbLabelFontHeightF =.01
  resP@gsnPanelYWhiteSpacePercent = 5
-  gsn_panel(wks,plots,(/1,2/),resP)
+  gsn_panel(wks,plots,(/1,3/),resP)
 

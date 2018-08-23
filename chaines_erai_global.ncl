@@ -3,7 +3,7 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/gsn_csm.ncl"
 
 Edir="/g/data1/ub4/erai/netcdf/6hr/atmos/oper_an_pl/v01/"
 outdir="/g/data/eg3/asp561/CHaines_ERAI/"
-do year=1979,2016
+do year=2017,2017
 
 tfile=addfiles( systemfunc (" ls -1 " + Edir + "ta/ta_6hrs_ERAI_historical_an-pl_" + year + "*.nc"), "r")
 hfile=addfiles( systemfunc (" ls -1 " + Edir + "hur/hur_6hrs_ERAI_historical_an-pl_" + year + "*.nc"), "r")
