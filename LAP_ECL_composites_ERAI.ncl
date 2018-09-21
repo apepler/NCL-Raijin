@@ -4,14 +4,14 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/wrf/WRFUserARW.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/csm/contributed.ncl"
 load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
-ECLDIR="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/500hPa_z/proj240_lows_rad2cv10/"
-filename=ECLDIR+"UM_lows_ERAI_500hPa_proj240_rad2cv10_bigaust_fixes.csv"
-fout=ECLDIR+"composite_ERAI_500hPa_proj240_rad2cv10_aust.nc"
+;ECLDIR="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/500hPa_z/proj240_lows_rad2cv10_v2/"
+;filename=ECLDIR+"UM_lows_ERAI_500hPa_proj240_rad2cv10_bigaust_fixes.csv"
+;fout=ECLDIR+"composite_ERAI_500hPa_proj240_rad2cv10_aust.nc"
 
-;ECLDIR="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/proj240_lows_rad5cv0.15/"
-;filename=ECLDIR+"UM_lows_ERAI_proj240_rad2cv1_bigaust_fixes.csv"
+ECLDIR="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/proj100_lows_rad5cv0.15/"
+filename=ECLDIR+"UM_lows_ERAI_proj100_rad5cv0.15_bigaust_fixes.csv"
 ;filename=ECLDIR+"ECLfixes_UM_ERAI_proj240_rad5cv0.15.csv"
-;fout=ECLDIR+"ECLcomposite_ERAI_proj240_rad5cv0.15.nc"
+fout=ECLDIR+"composite_ERAI_proj100_rad5cv0.15_aust.nc"
 
 lonlim=(/110,160/)
 latlim=(/-45,-10/)

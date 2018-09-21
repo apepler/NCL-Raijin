@@ -6,30 +6,25 @@ load "$NCARG_ROOT/lib/ncarg/nclscripts/esmf/ESMF_regridding.ncl"
 
 ;ECLDIR="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/proj240_lows_rad2cv1/"
 ;filename=ECLDIR+"UM_lows_ERAI_proj240_rad2cv1_bigaust_fixes.csv"
-;fout=ECLDIR+"raintemp_ERAI_proj240_rad2cv1_aust.nc"
+;fout=ECLDIR+"moiststable_ERAI_proj240_rad2cv1_aust.nc"
 
-;ECLDIR="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/500hPa_z/proj240_lows_rad2cv10_v2/"
-;filename=ECLDIR+"UM_lows_ERAI_500hPa_proj240_rad2cv10_bigaust_fixes.csv"
-;fout=ECLDIR+"raintemp_ERAI_500hPa_proj240_rad2cv10_aust.nc"
-
-ECLDIR="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/proj100_lows_rad5cv0.15/"
-filename=ECLDIR+"UM_lows_ERAI_proj100_rad5cv0.15_bigaust_fixes.csv"
-fout=ECLDIR+"raintemp_ERAI_proj100_rad5cv0.15_aust.nc"
-
+ECLDIR="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/500hPa_z/proj240_lows_rad2cv10_v2/"
+filename=ECLDIR+"UM_lows_ERAI_500hPa_proj240_rad2cv10_bigaust_fixes.csv"
+fout=ECLDIR+"moiststable_ERAI_500hPa_proj240_rad2cv10_aust.nc"
 
 ;ECLDIR="/short/eg3/asp561/cts.dir/gcyc_out/ERAI/proj240_lows_rad5cv0.15/"
 ;filename=ECLDIR+"UM_lows_ERAI_proj240_rad2cv1_bigaust_fixes.csv"
 ;filename=ECLDIR+"ECLfixes_UM_ERAI_proj240_rad5cv0.15.csv"
-;fout=ECLDIR+"ECLraintemp_ERAI_proj240_rad5cv0.15.nc"
+;fout=ECLDIR+"moiststable_ERAI_proj240_rad5cv0.15.nc"
 
-lev=500
+lev=700
 lonlim=(/110,160/)
 latlim=(/-45,-10/)
 
 syear=1979
 eyear=2017
 edir="/g/data1/ub4/erai/netcdf/"
-mdir="/g/data/eg3/asp561/ERAI/"
+cdir="/g/data/eg3/ajd548/NESP_EWP/CAPE/erainterim_reversible_nomix/"
 
 lon0=fspan(-10.5,10.5,29)
 lon0!0="lon"
@@ -72,18 +67,21 @@ delete(fin)
 
 ; Output files
 
-  ECL_T2=new((/len,dimsizes(lat0),dimsizes(lon0)/),"double")
-  ECL_T2!0="Time"
-  ECL_T2!1="lat"
-  ECL_T2!2="lon"
-  ECL_T2&lat=lat0
-  ECL_T2&lon=lon0
-  ECL_GPH500=ECL_T2
-  ECL_PRCP=ECL_T2
+  ECL_TCW=new((/len,dimsizes(lat0),dimsizes(lon0)/),"double")
+  ECL_TCW!0="Time"
+  ECL_TCW!1="lat"
+  ECL_TCW!2="lon"
+  ECL_TCW&lat=lat0
+  ECL_TCW&lon=lon0
+  ECL_BV700=ECL_TCW
+  ECL_MUCAPE=ECL_TCW
 
-  ECL_T2@description="6-hour 2m air temperature anomaly within 1000km radius of low centre"
-  ECL_GPH500@description="6-hour 500hPa geopotential height within 1000km radius of low centre"
-  ECL_PRCP@description="6-hour total rainfall within 1000km radius of low centre and +- 3 hours"
+  ECL_TCW@description="6-hour Total column water within 1000km radius of low centre"
+  ECL_BV700@description="6-hour 700hPa Brunt-Vaisala frequency within 1000km radius of low centre"
+  ECL_MUCAPE@description="6-hour most unstable CAPE within 1000km radius of low centre - calculated reversibly without entrainment from ADowdy files in /g/data/eg3/ajd548/NESP_EWP/CAPE/erainterim_reversible_nomix/. Only available until 2016"
+  ECL_TCW@units="kg m**-2"
+  ECL_BV700@units="1/s"
+  ECL_MUCAPE@units="J/kg"
 
   I=ind_nearest_coord(lat,elat,0)
   J=ind_nearest_coord(lon,elon,0)
@@ -95,33 +93,47 @@ delete(fin)
 
     n=(day(ip)-1)*4+time(ip)
 
-    Data=addfile(systemfunc("ls -1 "+edir+"/6hr/atmos/oper_an_sfc/v01/tas/tas_6hrs_ERAI_historical_an-sfc_"+year(ip)+sprinti("%2.2i",month(ip))+"*"),"r")
-    Data2=addfile(mdir+"ERAI.tas.monmean.19792016."+6*time(ip)+"UTC.allmonths.nc","r")
-    tas=(Data->tas(n,:,:))-(Data2->tas(month(ip)-1,:,:))
-    delete([/Data,Data2/])
-
-    Data=addfile(systemfunc("ls -1 "+edir+"/6hr/atmos/oper_an_pl/v01/z/z_6hrs_ERAI_historical_an-pl_"+year(ip)+sprinti("%2.2i",month(ip))+"*"),"r")
-    gph=Data->z(n,ll,:,:)/9.8065
+    Data=addfile(systemfunc("ls -1 "+edir+"/6hr/atmos/oper_an_sfc/v01/tcw/tcw_6hrs_ERAI_historical_an-sfc_"+year(ip)+sprinti("%2.2i",month(ip))+"*"),"r")
+    tcw=Data->tcw(n,:,:)
     delete(Data)
 
-    Data=addfile(systemfunc("ls -1 "+edir+"/3hr/atmos/oper_fc_sfc/v01/tp/tp_3hrs_ERAI_historical_fc-sfc_"+year(ip)+sprinti("%2.2i",month(ip))+"*"),"r")
-    n=(day(ip)-1)*8+time(ip)
-    prcp=dim_sum_n_Wrap(Data->tp(n:(n+1),:,:),0)*1000.
-    delete(Data)
- 
-    if(I(ip).gt.14.and.J(ip).gt.14.and.I(ip).lt.227.and.J(ip).lt.466) then
-      ECL_T2(ip,:,:)=(/tas((I(ip)+14):(I(ip)-14),(J(ip)-14):(J(ip)+14))/)
-      ECL_GPH500(ip,:,:)=(/gph((I(ip)+14):(I(ip)-14),(J(ip)-14):(J(ip)+14))/)
-      ECL_PRCP(ip,:,:)=(/prcp((I(ip)+14):(I(ip)-14),(J(ip)-14):(J(ip)+14))/)
+    if(year(ip).le.2016) then
+     Data=addfile(systemfunc("ls -1 "+cdir+"mucape_"+year(ip)+sprinti("%2.2i",month(ip))+"*"),"r")
+     cape=Data->mucape(n,:,:)
+     delete(Data)
     end if
 
-    delete([/tas,gph,prcp/])
+    ; Need a lot for brunt vasiala
+
+    Data=addfile(systemfunc("ls -1 "+edir+"/6hr/atmos/oper_an_pl/v01/z/z_6hrs_ERAI_historical_an-pl_"+year(ip)+sprinti("%2.2i",month(ip))+"*"),"r")
+    z=Data->z(n,:,:,:)/9.8065
+    Data2=addfile(systemfunc("ls -1 "+edir+"/6hr/atmos/oper_an_pl/v01/ta/ta_6hrs_ERAI_historical_an-pl_"+year(ip)+sprinti("%2.2i",month(ip))+"*"),"r")
+    ta=Data2->ta(n,:,:,:)
+    th=pot_temp(elev,ta,0,False)
+    bv=brunt_vaisala_atm(th,z,0,0)
+    bv=where(bv.lt.0,0,bv) 
+
+    delete([/Data,Data2/])
+ 
+    if(I(ip).gt.14.and.J(ip).gt.14.and.I(ip).lt.227.and.J(ip).lt.466) then
+      ECL_TCW(ip,:,:)=(/tcw((I(ip)+14):(I(ip)-14),(J(ip)-14):(J(ip)+14))/)
+      ECL_BV700(ip,:,:)=(/bv(ll,(I(ip)+14):(I(ip)-14),(J(ip)-14):(J(ip)+14))/)
+      if(year(ip).le.2016) then
+       ECL_MUCAPE(ip,:,:)=(/cape((I(ip)+14):(I(ip)-14),(J(ip)-14):(J(ip)+14))/)
+      end if
+    end if
+
+    delete([/tcw,ta,th,bv,z/])
+    if(year(ip).le.2016) then
+     delete(cape)
+    end if
+  
   end do
 
 ; Finally, write me a netcdf file
 
 system("/bin/rm -f "+fout)
 out = addfile(fout,"c")
-out->ECL_T2=ECL_T2
-out->ECL_GPH500=ECL_GPH500
-out->ECL_PRCP=ECL_PRCP
+out->ECL_TCW=ECL_TCW
+out->ECL_BV700=ECL_BV700
+out->ECL_MUCAPE=ECL_MUCAPE
